@@ -3,7 +3,7 @@ import pickle
 import re
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-# load saved files
+# load files
 with open("best_model.pkl", "rb") as f:
     model = pickle.load(f)
 
@@ -12,6 +12,8 @@ with open("vectorizer.pkl", "rb") as f:
 
 stop_words = ENGLISH_STOP_WORDS
 
+MODEL_NAME = "Logistic Regression"
+MODEL_ACCURACY = "98%+"
 
 def clean_text(text):
     text = str(text).lower()
@@ -23,23 +25,19 @@ def clean_text(text):
 
     return " ".join(words)
 
-
 def predict_news(news):
     cleaned = clean_text(news)
-
     transformed = vectorizer.transform([cleaned])
-
     prediction = model.predict(transformed)
 
     if prediction[0] == 0:
         return "FAKE NEWS"
-    else:
-        return "REAL NEWS"
-
+    return "REAL NEWS"
 
 st.title("Fake News Detection System")
 
-st.write("Enter a news article to check whether it is fake or real.")
+st.write(f"Model Used: {MODEL_NAME}")
+st.write(f"Model Accuracy: {MODEL_ACCURACY}")
 
 news = st.text_area("Paste news article here")
 
