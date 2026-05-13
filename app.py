@@ -3,7 +3,7 @@ import pickle
 import re
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-# load files
+# load deployed model
 with open("best_model.pkl", "rb") as f:
     model = pickle.load(f)
 
@@ -12,8 +12,10 @@ with open("vectorizer.pkl", "rb") as f:
 
 stop_words = ENGLISH_STOP_WORDS
 
-MODEL_NAME = "Logistic Regression"
-MODEL_ACCURACY = "98%+"
+# model metrics
+logistic_acc = 98.9
+nb_acc = 94.7
+rf_acc = 99.7
 
 def clean_text(text):
     text = str(text).lower()
@@ -25,6 +27,7 @@ def clean_text(text):
 
     return " ".join(words)
 
+
 def predict_news(news):
     cleaned = clean_text(news)
     transformed = vectorizer.transform([cleaned])
@@ -32,12 +35,22 @@ def predict_news(news):
 
     if prediction[0] == 0:
         return "FAKE NEWS"
-    return "REAL NEWS"
+    else:
+        return "REAL NEWS"
+
 
 st.title("Fake News Detection System")
 
-st.write(f"Model Used: {MODEL_NAME}")
-st.write(f"Model Accuracy: {MODEL_ACCURACY}")
+st.subheader("Model Performance Comparison")
+
+st.write(f"Logistic Regression Accuracy: {logistic_acc}%")
+st.write(f"Multinomial Naive Bayes Accuracy: {nb_acc}%")
+st.write(f"Random Forest Accuracy: {rf_acc}%")
+
+st.success("Best Historical Model: Random Forest (99.7%)")
+st.info("Current Deployed Model: Logistic Regression (optimized for deployment)")
+
+st.write("---")
 
 news = st.text_area("Paste news article here")
 
