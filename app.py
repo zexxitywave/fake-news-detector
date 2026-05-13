@@ -3,19 +3,13 @@ import pickle
 import re
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-# load deployed model
-with open("best_model.pkl", "rb") as f:
-    model = pickle.load(f)
-
-with open("vectorizer.pkl", "rb") as f:
-    vectorizer = pickle.load(f)
+# load models
+logistic = pickle.load(open("logistic_model.pkl", "rb"))
+nb = pickle.load(open("nb_model.pkl", "rb"))
+rf = pickle.load(open("rf_model.pkl", "rb"))
+vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
 
 stop_words = ENGLISH_STOP_WORDS
-
-# model metrics
-logistic_acc = 98.9
-nb_acc = 94.7
-rf_acc = 99.7
 
 def clean_text(text):
     text = str(text).lower()
@@ -27,36 +21,44 @@ def clean_text(text):
 
     return " ".join(words)
 
-
-def predict_news(news):
+def predict_model(model, news):
     cleaned = clean_text(news)
     transformed = vectorizer.transform([cleaned])
-    prediction = model.predict(transformed)
 
-    if prediction[0] == 0:
-        return "FAKE NEWS"
-    else:
-        return "REAL NEWS"
+    prediction = model.predict(transformed)[0]
+    confidence = model.predict_proba(transformed).max() * 100
 
+    label = "REAL NEWS" if prediction == 1 else "FAKE NEWS"
+
+    return label, confidence
 
 st.title("Fake News Detection System")
-
-st.subheader("Model Performance Comparison")
-
-st.write(f"Logistic Regression Accuracy: {logistic_acc}%")
-st.write(f"Multinomial Naive Bayes Accuracy: {nb_acc}%")
-st.write(f"Random Forest Accuracy: {rf_acc}%")
-
-st.success("Best Historical Model: Random Forest (99.7%)")
-st.info("Current Deployed Model: Logistic Regression (optimized for deployment)")
-
-st.write("---")
+st.write("Compare predictions from multiple ML models")
 
 news = st.text_area("Paste news article here")
 
 if st.button("Predict"):
     if news.strip():
-        result = predict_news(news)
-        st.success("Prediction: " + result)
+        log_pred, log_conf = predict_model(logistic, news)
+        nb_pred, nb_conf = predict_model(nb, news)
+        rf_pred, rf_conf = predict_model(rf, news)
+
+        st.subheader("Model Predictions")
+
+        st.write(f"Logistic Regression: {log_pred} ({log_conf:.2f}%)")
+        st.write(f"Naive Bayes: {nb_pred} ({nb_conf:.2f}%)")
+        st.write(f"Random Forest: {rf_pred} ({rf_conf:.2f}%)")
+
+        best = max(
+            [
+                ("Logistic Regression", log_conf),
+                ("Naive Bayes", nb_conf),
+                ("Random Forest", rf_conf)
+            ],
+            key=lambda x: x[1]
+        )
+
+        st.success(f"Best Model For This Input: {best[0]} ({best[1]:.2f}%)")
+
     else:
         st.warning("Please enter news text")
