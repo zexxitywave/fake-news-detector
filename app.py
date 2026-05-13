@@ -3,7 +3,6 @@ import pickle
 import re
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-# load models
 logistic = pickle.load(open("logistic_model.pkl", "rb"))
 nb = pickle.load(open("nb_model.pkl", "rb"))
 rf = pickle.load(open("rf_model.pkl", "rb"))
@@ -28,26 +27,30 @@ def predict_model(model, news):
     prediction = model.predict(transformed)[0]
     confidence = model.predict_proba(transformed).max() * 100
 
-    label = "REAL NEWS" if prediction == 1 else "FAKE NEWS"
+    if prediction == 1:
+        label = "REAL NEWS"
+    else:
+        label = "FAKE NEWS"
 
     return label, confidence
 
 st.title("Fake News Detection System")
-st.write("Compare predictions from multiple ML models")
+st.write("Compare predictions from all models")
 
 news = st.text_area("Paste news article here")
 
 if st.button("Predict"):
     if news.strip():
+
         log_pred, log_conf = predict_model(logistic, news)
         nb_pred, nb_conf = predict_model(nb, news)
         rf_pred, rf_conf = predict_model(rf, news)
 
         st.subheader("Model Predictions")
 
-        st.write(f"Logistic Regression: {log_pred} ({log_conf:.2f}%)")
-        st.write(f"Naive Bayes: {nb_pred} ({nb_conf:.2f}%)")
-        st.write(f"Random Forest: {rf_pred} ({rf_conf:.2f}%)")
+        st.success(f"Logistic Regression → {log_pred} | Confidence: {log_conf:.2f}%")
+        st.success(f"Naive Bayes → {nb_pred} | Confidence: {nb_conf:.2f}%")
+        st.success(f"Random Forest → {rf_pred} | Confidence: {rf_conf:.2f}%")
 
         best = max(
             [
@@ -58,7 +61,7 @@ if st.button("Predict"):
             key=lambda x: x[1]
         )
 
-        st.success(f"Best Model For This Input: {best[0]} ({best[1]:.2f}%)")
+        st.info(f"Best Model For This Input: {best[0]} ({best[1]:.2f}%)")
 
     else:
         st.warning("Please enter news text")
